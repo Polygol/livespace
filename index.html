@@ -19,6 +19,7 @@
             width: 100vw; height: 100vh;
             overflow: hidden;
             transition: background-color 0.3s;
+            user-select: none;
         }
 
         /* SVG Filter */
@@ -26,18 +27,13 @@
 
         /* General UI Components */
         .icon-btn {
-            background: var(--search-background);
-            border: 1px solid var(--border-color);
             color: var(--text-color);
-            border-radius: 14px;
             padding: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            backdrop-filter: var(--edge-refraction-filter) blur(10px);
             transition: transform 0.2s, background 0.2s;
-            box-shadow: var(--sun-shadow);
         }
         .material-symbols-rounded { font-size: 24px; }
 
@@ -69,7 +65,7 @@
         .space-card {
             aspect-ratio: 1;
             background: var(--search-background);
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--glass-border);
             border-radius: 35px; corner-shape: superellipse(1.5);
             backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
             display: flex; flex-direction: column;
@@ -94,7 +90,7 @@
             position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 10px; align-items: center;
             background: var(--search-background);
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--glass-border);
             padding: 8px 15px;
             border-radius: 35px; corner-shape: superellipse(1.5);
             backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
@@ -115,7 +111,7 @@
         
         .page-list-expanded {
             position: absolute; left: 70px; top: 0; width: 200px;
-            background: var(--search-background); border: 1px solid var(--border-color);
+            background: var(--search-background); border: 1px solid var(--glass-border);
             border-radius: 25px; corner-shape: superellipse(1.5);
             backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
             padding: 10px;
@@ -138,7 +134,7 @@
             position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 8px;
             background: var(--search-background);
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--glass-border);
             padding: 10px 12px;
             border-radius: 35px; corner-shape: superellipse(1.5);
             backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
@@ -149,7 +145,7 @@
         /* Tool Options (Popovers) */
         .tool-options {
             position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%);
-            background: var(--search-background); border: 1px solid var(--border-color);
+            background: var(--search-background); border: 1px solid var(--glass-border);
             padding: 10px; display: none; gap: 8px;
             border-radius: 35px; corner-shape: superellipse(1.5);
             backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
@@ -160,7 +156,7 @@
         /* Properties Panel (Selection) */
         .prop-panel {
             position: absolute; top: 80px; right: 20px;
-            background: var(--search-background); border: 1px solid var(--border-color);
+            background: var(--search-background); border: 1px solid var(--glass-border);
             border-radius: 15px; padding: 10px; display: none; flex-direction: column; gap: 8px;
             backdrop-filter: blur(10px); z-index: 90; width: 50px;
         }
