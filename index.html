@@ -10,6 +10,7 @@
     <script src="/assets/gurapp/api/gurasuraisu-api.js"></script>
     <script src="fabric.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/3.2.4/dexie.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
 
@@ -258,6 +259,9 @@
             </button>
             <div class="space-name" id="current-space-name" onclick="renameCurrentSpace()" style="cursor: pointer;">Untitled</div>
             <div style="width: 1px; height: 20px; background: var(--overlay-color-op); margin: 0 5px;"></div>
+            <button class="icon-btn" onclick="exportPDF()" style="border-radius: 50%; width: 32px; height: 32px;" title="Export PDF">
+                <span class="material-symbols-rounded" style="font-size: 20px;">arrow_circle_down</span>
+            </button>
             <button class="icon-btn" onclick="undo()" style="border-radius: 50%; width: 32px; height: 32px;" title="Undo">
                 <span class="material-symbols-rounded" style="font-size: 20px;">undo</span>
             </button>
@@ -305,6 +309,11 @@
                      <option value="Cursive">Handwritten</option>
                      <option value="Monospace">Mono</option>
                  </select>
+                 <select id="prop-note-shape" onchange="modifySelection('noteShape', this.value)" style="display:none; font-size: 12px; width: 100%; margin-top: 5px;">
+                     <option value="rect">Rectangle</option>
+                     <option value="square">Square</option>
+                     <option value="circle">Circle</option>
+                 </select>
             </div>
 
             <div style="height: 1px; background: var(--border-color); margin: 5px 0;"></div>
@@ -334,6 +343,19 @@
             <input type="range" id="line-width" min="1" max="20" value="3" style="width: 100px;" title="Line Width">
         </div>
 
+        <div class="tool-options" id="eraser-options">
+            <input type="range" id="eraser-width" min="5" max="100" value="20" style="width: 100px;" title="Eraser Size">
+        </div>
+
+        <div class="tool-options" id="note-options">
+            <select id="note-shape-default" style="padding: 5px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--glass-bg); color: var(--text-color);">
+                <option value="rect">Rectangle</option>
+                <option value="square">Square</option>
+                <option value="circle">Circle</option>
+            </select>
+            <input type="color" id="note-color-default" value="#ffeb3b" title="Note Color">
+        </div>
+
         <div class="tool-options" id="shape-options">
             <select id="shape-type" style="padding: 5px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--glass-bg); color: var(--text-color);">
                 <option value="rect">Rectangle</option>
@@ -361,7 +383,7 @@
             <button class="icon-btn" onclick="setMode('draw')" id="btn-draw" oncontextmenu="toggleOptions('draw-options'); return false;" title="Draw">
                 <span class="material-symbols-rounded">ink_pen</span>
             </button>
-            <button class="icon-btn" onclick="setMode('eraser')" id="btn-eraser" title="Eraser">
+            <button class="icon-btn" onclick="setMode('eraser')" id="btn-eraser" oncontextmenu="toggleOptions('eraser-options'); return false;" title="Eraser">
                 <span class="material-symbols-rounded">ink_eraser</span>
             </button>
             <button class="icon-btn" onclick="setMode('line')" id="btn-line" oncontextmenu="toggleOptions('line-options'); return false;" title="Line">
@@ -370,7 +392,7 @@
             <button class="icon-btn" onclick="setMode('shape')" id="btn-shape" oncontextmenu="toggleOptions('shape-options'); return false;" title="Shapes">
                 <span class="material-symbols-rounded">shapes</span>
             </button>
-            <button class="icon-btn" onclick="createStickyNote()" id="btn-note" title="Sticky Note">
+            <button class="icon-btn" onclick="createStickyNote()" id="btn-note" oncontextmenu="toggleOptions('note-options'); return false;" title="Sticky Note">
                 <span class="material-symbols-rounded">sticky_note_2</span>
             </button>
             <button class="icon-btn" onclick="addText()" id="btn-text" title="Text">
@@ -612,7 +634,8 @@
             } else if (mode === 'eraser') {
                  canvas.isDrawingMode = true;
                  canvas.freeDrawingBrush = new fabric.EraserBrush(canvas);
-                 canvas.freeDrawingBrush.width = 20;
+                 canvas.freeDrawingBrush.width = parseInt(document.getElementById('eraser-width').value, 10);
+                 document.getElementById('eraser-options').classList.add('show');
             } else if (mode === 'line') {
                  document.getElementById('line-options').classList.add('show');
                  canvas.selection = false;
@@ -649,35 +672,35 @@
         // --- Sticky Notes ---
         function createStickyNote() {
             setMode('select');
-            const center = canvas.getCenter();
-            // Correct logic to find center of Viewport
+            const shapeType = document.getElementById('note-shape-default').value;
+            const color = document.getElementById('note-color-default').value;
+            
             const vpt = canvas.viewportTransform;
             const x = (-vpt[4] + canvas.width/2) / canvas.getZoom();
             const y = (-vpt[5] + canvas.height/2) / canvas.getZoom();
 
-            // Default Font
-            const fontFamily = 'Inter'; 
-            
-            const rect = new fabric.Rect({
-                width: 150, height: 150,
-                fill: stickyColor,
-                strokeWidth: 0,
-                originX: 'center', originY: 'center',
-                rx: 5, ry: 5
-            });
+            let bg;
+            if (shapeType === 'circle') {
+                bg = new fabric.Circle({ radius: 75, fill: color, originX: 'center', originY: 'center' });
+            } else if (shapeType === 'square') {
+                bg = new fabric.Rect({ width: 150, height: 150, fill: color, originX: 'center', originY: 'center', rx: 5, ry: 5 });
+            } else {
+                // Rectangle
+                bg = new fabric.Rect({ width: 200, height: 150, fill: color, originX: 'center', originY: 'center', rx: 5, ry: 5 });
+            }
             
             const text = new fabric.IText('Note', {
-                fontFamily: fontFamily,
+                fontFamily: 'Inter',
                 fontSize: 20,
-                fill: (stickyColor === '#212121') ? '#fff' : '#333',
+                fill: (color === '#212121' || color === '#000000') ? '#fff' : '#333',
                 originX: 'center', originY: 'center',
                 width: 130,
                 splitByGrapheme: true
             });
             
-            const group = new fabric.Group([rect, text], { left: x, top: y });
-            // Tag object for identification
+            const group = new fabric.Group([bg, text], { left: x, top: y });
             group.isStickyNote = true;
+            group.noteShape = shapeType;
             
             canvas.add(group);
             canvas.setActiveObject(group);
@@ -699,12 +722,18 @@
             canvas.setActiveObject(text);
             saveHistory();
         }
-
+        
         // --- Draw Settings ---
         document.getElementById('draw-color').addEventListener('change', updateDrawSettings);
         document.getElementById('draw-width').addEventListener('input', updateDrawSettings);
+        document.getElementById('eraser-width').addEventListener('input', function() {
+            if (mode === 'eraser' && canvas.freeDrawingBrush) {
+                canvas.freeDrawingBrush.width = parseInt(this.value, 10);
+            }
+        });
+
         function updateDrawSettings() {
-            if(canvas.freeDrawingBrush) {
+            if(mode === 'draw' && canvas.freeDrawingBrush) {
                 canvas.freeDrawingBrush.color = document.getElementById('draw-color').value;
                 canvas.freeDrawingBrush.width = parseInt(document.getElementById('draw-width').value, 10);
             }
@@ -766,6 +795,13 @@
             else if (active.isStickyNote) font = active.item(1).fontFamily;
             
             document.getElementById('prop-font').value = font;
+            
+            if (active.isStickyNote) {
+                document.getElementById('prop-note-shape').style.display = 'block';
+                document.getElementById('prop-note-shape').value = active.noteShape || 'rect';
+            } else {
+                document.getElementById('prop-note-shape').style.display = 'none';
+            }
         }
         
         function hideProps() { document.getElementById('prop-panel').classList.remove('show'); }
@@ -777,6 +813,29 @@
             if (attr === 'delete') {
                 canvas.remove(active);
                 hideProps();
+            } else if (attr === 'noteShape') {
+                if (active.isStickyNote) {
+                    const textObj = active.item(1);
+                    const oldBg = active.item(0);
+                    const color = oldBg.fill;
+                    
+                    let newBg;
+                    if (val === 'circle') newBg = new fabric.Circle({ radius: 75, fill: color, originX: 'center', originY: 'center' });
+                    else if (val === 'square') newBg = new fabric.Rect({ width: 150, height: 150, fill: color, originX: 'center', originY: 'center', rx: 5, ry: 5 });
+                    else newBg = new fabric.Rect({ width: 200, height: 150, fill: color, originX: 'center', originY: 'center', rx: 5, ry: 5 });
+                    
+                    // Recreate group to ensure bounding box updates correctly
+                    const x = active.left;
+                    const y = active.top;
+                    
+                    canvas.remove(active);
+                    const newGroup = new fabric.Group([newBg, textObj], { left: x, top: y });
+                    newGroup.isStickyNote = true;
+                    newGroup.noteShape = val;
+                    
+                    canvas.add(newGroup);
+                    canvas.setActiveObject(newGroup);
+                }
             } else if (attr === 'front') {
                 active.bringToFront();
             } else if (attr === 'back') {
@@ -877,6 +936,26 @@
 
         function exitWorkspace() {
             saveCurrentPage().then(loadHome);
+        }
+        
+        function exportPDF() {
+            if (!window.jspdf) {
+                Gurasuraisu.showAlert('Ensure you are connected to the internet.', 'Error');
+                return;
+            }
+            const { jsPDF } = window.jspdf;
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            const doc = new jsPDF({
+                orientation: width > height ? 'landscape' : 'portrait',
+                unit: 'px',
+                format: [width, height]
+            });
+            
+            const data = canvas.toDataURL({ format: 'jpeg', quality: 0.9, multiplier: 1 });
+            doc.addImage(data, 'JPEG', 0, 0, width, height);
+            doc.save((document.getElementById('current-space-name').innerText || 'drawing') + '.pdf');
         }
 
         // --- Page Logic ---
