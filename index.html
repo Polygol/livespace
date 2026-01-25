@@ -27,6 +27,21 @@
 
         /* General UI Components */
         .icon-btn {
+            background-color: transparent;
+            border: none;
+            color: var(--text-color);
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .side-panel-btn {
+            background-color: var(--search-background);
+            border: 1px solid var(--glass-border);
+            border-radius: 35px; corner-shape: superellipse(1.5);
+            backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
             color: var(--text-color);
             padding: 10px;
             display: flex;
@@ -225,7 +240,7 @@
         </div>
 
         <div class="side-panel">
-            <button class="icon-btn" id="pages-toggle">
+            <button class="side-panel-btn" id="pages-toggle">
                 <span class="material-symbols-rounded">layers</span>
             </button>
             <!-- Expanded Pages List -->
@@ -237,7 +252,7 @@
                 <div id="pages-container"></div>
             </div>
             
-            <button class="icon-btn" onclick="resetZoom()">
+            <button class="side-panel-btn" onclick="resetZoom()">
                 <span class="material-symbols-rounded">center_focus_strong</span>
             </button>
         </div>
