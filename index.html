@@ -1053,108 +1053,32 @@
             saveCurrentPage().then(loadHome);
         }
         
-        async function exportPDF() {
+        function exportPDF() {
             if (!window.jspdf) {
-                Gurasuraisu.showAlert('Ensure you are connected to the internet.', 'Cannot export as PDF');
+                Gurasuraisu.showAlert('Ensure you are connected to the internet.', 'Error');
                 return;
             }
+            const { jsPDF } = window.jspdf;
+            const width = canvas.width;
+            const height = canvas.height;
             
-            Gurasuraisu.showPopup('Exporting as PDF');
-            await saveCurrentPage(true);
+            const doc = new jsPDF({
+                orientation: width > height ? 'landscape' : 'portrait',
+                unit: 'px',
+                format: [width, height]
+            });
             
             const originalBg = canvas.backgroundColor;
+            canvas.backgroundColor = '#ffffff';
+            canvas.renderAll();
             
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ unit: 'px', hotfixes: ["px_scaling"] });
-            doc.deletePage(1); // Remove default starting page
+            const data = canvas.toDataURL({ format: 'jpeg', quality: 1, multiplier: 1 });
             
-            const pages = await db.pages.where('spaceId').equals(currentSpaceId).sortBy('order');
-            
-            try {
-                for (let i = 0; i < pages.length; i++) {
-                    const page = pages[i];
-                    
-                    // 1. Load Page Data Cleanly
-                    await new Promise(resolve => {
-                        canvas.clear();
-                        canvas.setBackgroundColor('#ffffff', () => { 
-                             if (page.data && page.data.objects) canvas.loadFromJSON(page.data, resolve);
-                             else resolve();
-                        });
-                    });
-                    
-                    // 2. Reset Viewport to Identity (1:1) for accurate bound calculation
-                    canvas.setViewportTransform([1,0,0,1,0,0]);
-                    
-                    const objects = canvas.getObjects();
-                    let x = 0, y = 0, w = 800, h = 600;
-                    
-                    if (objects.length > 0) {
-                        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-                        objects.forEach(o => {
-                            const br = o.getBoundingRect();
-                            if (br.left < minX) minX = br.left;
-                            if (br.top < minY) minY = br.top;
-                            if (br.left + br.width > maxX) maxX = br.left + br.width;
-                            if (br.top + br.height > maxY) maxY = br.top + br.height;
-                        });
-                        const padding = 50;
-                        x = minX - padding;
-                        y = minY - padding;
-                        w = (maxX - minX) + (padding * 2);
-                        h = (maxY - minY) + (padding * 2);
-                    }
-                    
-                    // 3. Smart Quality Scaling (Aim for 4K / ~4000px)
-                    // Caps at 5000px to prevent browser crash (Blank Page Bug)
-                    const maxDim = Math.max(w, h);
-                    let multiplier = 3840 / maxDim; // Attempt to scale to 4K
-                    
-                    // Cap max dimension to ~5000px to be safe on mobile/browsers
-                    if (maxDim * multiplier > 5000) multiplier = 5000 / maxDim;
-                    
-                    // Ensure at least 2x scale if content is small and fits in cap
-                    if (multiplier < 2 && maxDim * 2 <= 5000) multiplier = 2;
-                    
-                    canvas.renderAll();
-                    
-                    // 4. Generate High Quality Bitmap
-                    const data = canvas.toDataURL({
-                        format: 'jpeg',
-                        quality: 1.0,
-                        multiplier: multiplier,
-                        left: x, top: y, width: w, height: h
-                    });
-                    
-                    // 5. Add to PDF
-                    const orientation = w > h ? 'landscape' : 'portrait';
-                    doc.addPage([w, h], orientation);
-                    doc.addImage(data, 'JPEG', 0, 0, w, h);
-                }
-                
-                window.open(doc.output('bloburl'), '_blank');
-                
-            } catch (err) {
-                console.error("PDF Export Failed:", err);
-                Gurasuraisu.showAlert('The page may be too large.', 'Exporting PDF failed');
-            } finally {
-                // Restore Original State
-                canvas.backgroundColor = originalBg;
-                document.getElementById('current-space-name').innerText = originalTitle;
-                
-                // Reload current page to restore view
-                const curr = pages.find(p => p.id === currentPageId);
-                if(curr && curr.data) {
-                    canvas.clear();
-                    canvas.loadFromJSON(curr.data, () => {
-                         canvas.renderAll();
-                         resetZoom();
-                    });
-                } else {
-                    canvas.clear();
-                    resetZoom();
-                }
-            }
+            canvas.backgroundColor = originalBg;
+            canvas.renderAll();
+
+            doc.addImage(data, 'JPEG', 0, 0, width, height);
+            doc.save((document.getElementById('current-space-name').innerText || 'drawing') + '.pdf');
         }
 
         // --- Page Logic ---
