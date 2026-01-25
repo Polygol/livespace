@@ -912,12 +912,9 @@
                 el.className = 'space-card';
                 el.onclick = (e) => { if(e.target.tagName !== 'BUTTON') openSpace(space.id, space.title); };
                 el.innerHTML = `
-                    <div style="flex:1; display:flex; justify-content:center; align-items:center;">
-                       <span class="material-symbols-rounded" style="font-size:48px; opacity:0.3;">draw</span>
-                    </div>
                     <h3>${space.title}</h3>
                     <div class="meta">${new Date(space.createdAt).toLocaleDateString()}</div>
-                    <button class="space-delete" onclick="deleteSpace(${space.id}, '${space.title.replace(/'/g, "\\'")}', event)"><span class="material-symbols-rounded" style="padding: 10px; font-size: 18px;">cancel</span></button>
+                    <button class="space-delete" onclick="deleteSpace(${space.id}, '${space.title.replace(/'/g, "\\'")}', event)"><span class="material-symbols-rounded" style="padding: 5px; font-size: 18px;">cancel</span></button>
                 `;
                 container.appendChild(el);
             });
