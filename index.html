@@ -981,7 +981,15 @@
                 format: [width, height]
             });
             
-            const data = canvas.toDataURL({ format: 'jpeg', quality: 0.9, multiplier: 1 });
+            const originalBg = canvas.backgroundColor;
+            canvas.backgroundColor = '#ffffff';
+            canvas.renderAll();
+            
+            const data = canvas.toDataURL({ format: 'jpeg', quality: 1, multiplier: 1 });
+            
+            canvas.backgroundColor = originalBg;
+            canvas.renderAll();
+
             doc.addImage(data, 'JPEG', 0, 0, width, height);
             doc.save((document.getElementById('current-space-name').innerText || 'drawing') + '.pdf');
         }
