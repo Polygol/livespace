@@ -394,7 +394,7 @@
                 <span class="material-symbols-rounded">shapes</span>
             </button>
             <div style="width: 1px;background: var(--overlay-color-op);margin: 5px;"></div>
-            <button class="icon-btn" onclick="createStickyNote()" id="btn-note" oncontextmenu="toggleOptions('note-options'); return false;" title="Sticky Note">
+            <button class="icon-btn" onclick="setMode('note')" id="btn-note" title="Sticky Note">
                 <span class="material-symbols-rounded">sticky_note_2</span>
             </button>
             <button class="icon-btn" onclick="addText()" id="btn-text" title="Text">
@@ -438,14 +438,54 @@
                 height: window.innerHeight,
                 backgroundColor: 'transparent',
                 isDrawingMode: false,
-                fireRightClick: true,
+                fireRightClick: false, // Disable right click for touch focus
                 stopContextMenu: true
             });
+
+            // Prevent browser context menu globally
+            window.addEventListener('contextmenu', e => e.preventDefault(), { passive: false });
             
             // History Listeners
             canvas.on('object:added', (e) => saveHistory());
             canvas.on('object:modified', (e) => saveHistory());
             canvas.on('object:removed', (e) => saveHistory());
+            
+            // Sticky Note Double Click Edit
+            canvas.on('mouse:dblclick', function(opt) {
+                if (opt.target && opt.target.isStickyNote) {
+                    const group = opt.target;
+                    const noteShape = group.noteShape;
+                    
+                    // Temporarily ungroup to allow text editing
+                    const sel = group.toActiveSelection();
+                    canvas.discardActiveObject();
+                    
+                    const items = sel.getObjects();
+                    const textObj = items.find(i => i.type === 'i-text');
+                    const bgObj = items.find(i => i !== textObj);
+                    
+                    if (textObj) {
+                        canvas.setActiveObject(textObj);
+                        textObj.enterEditing();
+                        textObj.selectAll();
+                        
+                        textObj.on('editing:exited', () => {
+                             // Regroup after editing
+                             const newGroup = new fabric.Group([bgObj, textObj]);
+                             newGroup.isStickyNote = true;
+                             newGroup.noteShape = noteShape;
+                             
+                             canvas.remove(bgObj);
+                             canvas.remove(textObj);
+                             canvas.add(newGroup);
+                             canvas.requestRenderAll();
+                             saveHistory();
+                             textObj.off('editing:exited');
+                        });
+                    }
+                    canvas.requestRenderAll();
+                }
+            });
             
             // Touch Gesture Logic (Infinite Pan/Zoom)
             canvas.on('mouse:wheel', function(opt) {
@@ -484,13 +524,18 @@
                     return;
                 }
 
-                // Shape Tool Logic (Click to place or Drag to draw?)
-                // Implementation: Click to place at pointer for simplicity, or simple drag
+                // Shape Tool Logic
                 if (mode === 'shape') {
-                     // Just place it on click to keep touch simple
                      createShapeAt(ptr.x, ptr.y);
-                     setMode('select'); // Auto-switch back
+                     setMode('select');
                      return;
+                }
+
+                // Sticky Note Tool Logic
+                if (mode === 'note') {
+                    createStickyNoteAt(ptr.x, ptr.y);
+                    setMode('select');
+                    return;
                 }
 
                 // Pan Logic
@@ -617,32 +662,58 @@
             canvas.setViewportTransform([1,0,0,1,0,0]);
             updateGrid();
         }
-
+        
         // --- Tools & Modes ---
         function setMode(newMode) {
+            // Toggle options if clicking active mode
+            if (mode === newMode) {
+                const map = {
+                    'draw': 'draw-options',
+                    'eraser': 'eraser-options',
+                    'line': 'line-options',
+                    'shape': 'shape-options',
+                    'note': 'note-options'
+                };
+                if (map[newMode]) {
+                    toggleOptions(map[newMode]);
+                    return;
+                }
+            }
+
             mode = newMode;
             canvas.isDrawingMode = false;
             
             document.querySelectorAll('.toolssection .icon-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('btn-' + newMode).classList.add('active');
+            const btn = document.getElementById('btn-' + newMode);
+            if(btn) btn.classList.add('active');
             
+            // Hide all options first
             document.querySelectorAll('.tool-options').forEach(o => o.classList.remove('show'));
 
             if (mode === 'draw') {
                 canvas.isDrawingMode = true;
                 canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
-                document.getElementById('draw-options').classList.add('show');
                 updateDrawSettings();
             } else if (mode === 'eraser') {
                  canvas.isDrawingMode = true;
                  canvas.freeDrawingBrush = new fabric.EraserBrush(canvas);
                  canvas.freeDrawingBrush.width = parseInt(document.getElementById('eraser-width').value, 10);
-                 document.getElementById('eraser-options').classList.add('show');
             } else if (mode === 'line') {
-                 document.getElementById('line-options').classList.add('show');
                  canvas.selection = false;
-            } else if (mode === 'shape') {
-                 document.getElementById('shape-options').classList.add('show');
+            }
+            
+            // Show options for the mode automatically if switching to it
+            /* Optional: To keep UI clean, we can choose NOT to show immediately, or show. 
+               Let's show them to replace the right-click behavior. */
+            const map = {
+                'draw': 'draw-options',
+                'eraser': 'eraser-options',
+                'line': 'line-options',
+                'shape': 'shape-options',
+                'note': 'note-options'
+            };
+            if (map[mode]) {
+                document.getElementById(map[mode]).classList.add('show');
             }
         }
 
@@ -672,22 +743,16 @@
         }
 
         // --- Sticky Notes ---
-        function createStickyNote() {
-            setMode('select');
+        function createStickyNoteAt(x, y) {
             const shapeType = document.getElementById('note-shape-default').value;
             const color = document.getElementById('note-color-default').value;
             
-            const vpt = canvas.viewportTransform;
-            const x = (-vpt[4] + canvas.width/2) / canvas.getZoom();
-            const y = (-vpt[5] + canvas.height/2) / canvas.getZoom();
-
             let bg;
             if (shapeType === 'circle') {
                 bg = new fabric.Circle({ radius: 75, fill: color, originX: 'center', originY: 'center' });
             } else if (shapeType === 'square') {
                 bg = new fabric.Rect({ width: 150, height: 150, fill: color, originX: 'center', originY: 'center', rx: 5, ry: 5 });
             } else {
-                // Rectangle
                 bg = new fabric.Rect({ width: 200, height: 150, fill: color, originX: 'center', originY: 'center', rx: 5, ry: 5 });
             }
             
@@ -971,26 +1036,56 @@
                 Gurasuraisu.showAlert('Ensure you are connected to the internet.', 'Error');
                 return;
             }
-            const { jsPDF } = window.jspdf;
-            const width = canvas.width;
-            const height = canvas.height;
             
-            const doc = new jsPDF({
-                orientation: width > height ? 'landscape' : 'portrait',
-                unit: 'px',
-                format: [width, height]
+            // Calculate Bounding Box of all content
+            const objects = canvas.getObjects();
+            if (objects.length === 0) {
+                Gurasuraisu.showPopup('Canvas is empty');
+                return;
+            }
+            
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            objects.forEach(o => {
+                const br = o.getBoundingRect(); // accounts for rotation and scale
+                if (br.left < minX) minX = br.left;
+                if (br.top < minY) minY = br.top;
+                if (br.left + br.width > maxX) maxX = br.left + br.width;
+                if (br.top + br.height > maxY) maxY = br.top + br.height;
             });
             
+            // Add padding
+            const padding = 50;
+            const x = minX - padding;
+            const y = minY - padding;
+            const w = maxX - minX + (padding * 2);
+            const h = maxY - minY + (padding * 2);
+            
+            // White Background for PDF
             const originalBg = canvas.backgroundColor;
             canvas.backgroundColor = '#ffffff';
+            
+            // Generate Image
+            const data = canvas.toDataURL({
+                format: 'jpeg',
+                quality: 0.9,
+                multiplier: 2, // High Quality
+                left: x,
+                top: y,
+                width: w,
+                height: h
+            });
+            
+            canvas.backgroundColor = originalBg; // Restore transparent
             canvas.renderAll();
             
-            const data = canvas.toDataURL({ format: 'jpeg', quality: 1, multiplier: 1 });
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                orientation: w > h ? 'landscape' : 'portrait',
+                unit: 'px',
+                format: [w, h]
+            });
             
-            canvas.backgroundColor = originalBg;
-            canvas.renderAll();
-
-            doc.addImage(data, 'JPEG', 0, 0, width, height);
+            doc.addImage(data, 'JPEG', 0, 0, w, h);
             doc.save((document.getElementById('current-space-name').innerText || 'drawing') + '.pdf');
         }
 
