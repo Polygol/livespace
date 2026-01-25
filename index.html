@@ -773,34 +773,63 @@
             if (!active) return;
             document.getElementById('prop-panel').classList.add('show');
             
-            // Populate fields based on selection
-            // Colors
-            if (active.fill && typeof active.fill === 'string') {
-                document.getElementById('prop-fill').value = active.fill;
-            } else if (active.isStickyNote) {
-                // Group item 0 is rect
-                document.getElementById('prop-fill').value = active.item(0).fill;
-            }
+            const fillParent = document.getElementById('prop-fill').parentElement;
+            const strokeParent = document.getElementById('prop-stroke-container');
+            const strokeWidth = document.getElementById('prop-stroke-width');
+            const fontSelect = document.getElementById('prop-font');
+            const noteShape = document.getElementById('prop-note-shape');
             
-            if (active.stroke) {
-                 document.getElementById('prop-stroke').value = active.stroke;
-            }
-            if (active.strokeWidth !== undefined) {
-                 document.getElementById('prop-stroke-width').value = active.strokeWidth;
-            }
-            
-            // Fonts
-            let font = 'Inter';
-            if (active.type === 'i-text') font = active.fontFamily;
-            else if (active.isStickyNote) font = active.item(1).fontFamily;
-            
-            document.getElementById('prop-font').value = font;
-            
+            // Reset Display
+            fillParent.style.display = 'none';
+            strokeParent.style.display = 'none';
+            strokeWidth.style.display = 'none';
+            fontSelect.style.display = 'none';
+            noteShape.style.display = 'none';
+
             if (active.isStickyNote) {
-                document.getElementById('prop-note-shape').style.display = 'block';
-                document.getElementById('prop-note-shape').value = active.noteShape || 'rect';
+                // Sticky Note
+                fillParent.style.display = 'block';
+                document.getElementById('prop-fill').value = active.item(0).fill;
+                
+                fontSelect.style.display = 'block';
+                fontSelect.value = active.item(1).fontFamily;
+                
+                noteShape.style.display = 'block';
+                noteShape.value = active.noteShape || 'rect';
+            } else if (active.type === 'i-text') {
+                // Text
+                fillParent.style.display = 'block';
+                document.getElementById('prop-fill').value = active.fill;
+                
+                strokeParent.style.display = 'block';
+                document.getElementById('prop-stroke').value = active.stroke || '#000000';
+                
+                strokeWidth.style.display = 'block';
+                strokeWidth.value = active.strokeWidth || 0;
+                
+                fontSelect.style.display = 'block';
+                fontSelect.value = active.fontFamily;
+            } else if (active.type === 'image') {
+                // Image - only Actions
+            } else if (active.type === 'path' || active.type === 'line') {
+                // Drawing / Line
+                strokeParent.style.display = 'block';
+                document.getElementById('prop-stroke').value = active.stroke;
+                
+                strokeWidth.style.display = 'block';
+                strokeWidth.value = active.strokeWidth || 0;
             } else {
-                document.getElementById('prop-note-shape').style.display = 'none';
+                // Shapes (Rect, Circle, etc.)
+                if (active.fill && active.fill !== 'transparent') {
+                    fillParent.style.display = 'block';
+                    document.getElementById('prop-fill').value = active.fill;
+                }
+                
+                strokeParent.style.display = 'block';
+                document.getElementById('prop-stroke').value = active.stroke || '#000000';
+                
+                strokeWidth.style.display = 'block';
+                strokeWidth.value = active.strokeWidth || 0;
             }
         }
         
