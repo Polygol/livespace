@@ -165,8 +165,8 @@
         .page-item.active { background: var(--accent); color: var(--background-color); }
         .page-item:hover:not(.active) { background: rgba(255,255,255,0.1); }
 
-        /* Bottom Toolbar */
-        .toolbar {
+        /* Bottom toolssection */
+        .toolssection {
             position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 8px;
             background: var(--glass-bg);
@@ -287,7 +287,7 @@
              <input type="color" id="prop-color" title="Change Color" onchange="modifySelection('color', this.value)">
         </div>
 
-        <!-- Toolbar Options Popovers -->
+        <!-- toolssection Options Popovers -->
         <div class="tool-options" id="draw-options">
             <input type="color" id="draw-color" value="#ffffff">
             <input type="range" id="draw-width" min="1" max="50" value="5" style="width: 100px;">
@@ -300,8 +300,8 @@
              <div onclick="setStickyColor('#212121')" style="width:24px;height:24px;background:#212121;border-radius:50%;cursor:pointer;border:1px solid #666;"></div>
         </div>
 
-        <!-- Main Toolbar -->
-        <div class="toolbar">
+        <!-- Main toolssection -->
+        <div class="toolssection">
             <button class="icon-btn active" onclick="setMode('select')" id="btn-select">
                 <span class="material-symbols-rounded">pan_tool_alt</span>
             </button>
@@ -455,7 +455,7 @@
             mode = newMode;
             canvas.isDrawingMode = (mode === 'draw');
             
-            document.querySelectorAll('.toolbar .icon-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.toolssection .icon-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('btn-' + newMode).classList.add('active');
             
             document.querySelectorAll('.tool-options').forEach(o => o.classList.remove('show'));
