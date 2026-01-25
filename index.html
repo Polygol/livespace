@@ -131,13 +131,13 @@
             background: var(--search-background);
             border: 1px solid var(--glass-border);
             padding: 8px 15px;
-            border-radius: 35px; corner-shape: superellipse(1.5);
+            border-radius: 50px;
             backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
             z-index: 100;
             box-shadow: var(--sun-shadow), 0 4px 10px rgba(0,0,0,0.1);
         }
         
-        .space-name { font-weight: 600; padding: 0 10px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .space-name { font-weight: 600; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         /* Floating Sidebar (Pages/Layers) */
         .side-panel {
@@ -257,16 +257,12 @@
                 <span class="material-symbols-rounded" style="font-size: 20px;">arrow_back</span>
             </button>
             <div class="space-name" id="current-space-name" onclick="renameCurrentSpace()" style="cursor: pointer;">Untitled</div>
-            <div style="width: 1px; height: 20px; background: var(--glass-border); margin: 0 5px;"></div>
+            <div style="width: 1px; height: 20px; background: var(--overlay-color-op); margin: 0 5px;"></div>
             <button class="icon-btn" onclick="undo()" style="border-radius: 50%; width: 32px; height: 32px;" title="Undo">
                 <span class="material-symbols-rounded" style="font-size: 20px;">undo</span>
             </button>
             <button class="icon-btn" onclick="redo()" style="border-radius: 50%; width: 32px; height: 32px;" title="Redo">
                 <span class="material-symbols-rounded" style="font-size: 20px;">redo</span>
-            </button>
-            <div style="width: 1px; height: 20px; background: var(--glass-border); margin: 0 5px;"></div>
-            <button class="icon-btn" onclick="saveCurrentPage()" style="border-radius: 50%; width: 32px; height: 32px;" title="Save">
-                <span class="material-symbols-rounded" style="font-size: 20px;">save</span>
             </button>
         </div>
 
