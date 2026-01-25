@@ -257,7 +257,15 @@
                 <span class="material-symbols-rounded" style="font-size: 20px;">arrow_back</span>
             </button>
             <div class="space-name" id="current-space-name" onclick="renameCurrentSpace()" style="cursor: pointer;">Untitled</div>
-            <button class="icon-btn" onclick="saveCurrentPage()" style="border-radius: 50%; width: 32px; height: 32px;">
+            <div style="width: 1px; height: 20px; background: var(--glass-border); margin: 0 5px;"></div>
+            <button class="icon-btn" onclick="undo()" style="border-radius: 50%; width: 32px; height: 32px;" title="Undo">
+                <span class="material-symbols-rounded" style="font-size: 20px;">undo</span>
+            </button>
+            <button class="icon-btn" onclick="redo()" style="border-radius: 50%; width: 32px; height: 32px;" title="Redo">
+                <span class="material-symbols-rounded" style="font-size: 20px;">redo</span>
+            </button>
+            <div style="width: 1px; height: 20px; background: var(--glass-border); margin: 0 5px;"></div>
+            <button class="icon-btn" onclick="saveCurrentPage()" style="border-radius: 50%; width: 32px; height: 32px;" title="Save">
                 <span class="material-symbols-rounded" style="font-size: 20px;">save</span>
             </button>
         </div>
@@ -281,54 +289,102 @@
         </div>
 
         <!-- Selection Properties (Contextual) -->
-        <div class="prop-panel" id="prop-panel">
-            <button class="icon-btn" onclick="modifySelection('delete')" title="Delete">
-                <span class="material-symbols-rounded" style="color:#ff6b6b;">cancel</span>
+        <div class="prop-panel" id="prop-panel" style="width: auto; min-width: 60px;">
+            <!-- Colors -->
+            <div class="prop-row" style="display: flex; gap: 5px; justify-content: center;">
+                <div title="Fill Color">
+                    <input type="color" id="prop-fill" onchange="modifySelection('fill', this.value)">
+                </div>
+                <div title="Stroke Color" id="prop-stroke-container">
+                    <input type="color" id="prop-stroke" onchange="modifySelection('stroke', this.value)">
+                </div>
+            </div>
+
+            <!-- Font / Stroke Width -->
+            <div class="prop-row" id="prop-extra-controls" style="display: flex; flex-direction: column; gap: 5px; margin-top: 5px;">
+                 <input type="range" id="prop-stroke-width" min="0" max="20" title="Stroke Width" onchange="modifySelection('strokeWidth', this.value)">
+                 <select id="prop-font" onchange="modifySelection('fontFamily', this.value)" style="font-size: 12px; width: 100%;">
+                     <option value="Inter">Inter</option>
+                     <option value="Open Runde">Open Runde</option>
+                     <option value="Cursive">Handwritten</option>
+                     <option value="Monospace">Mono</option>
+                 </select>
+            </div>
+
+            <div style="height: 1px; background: var(--border-color); margin: 5px 0;"></div>
+
+            <!-- Actions -->
+            <div class="prop-row" style="display: flex; gap: 5px; justify-content: center;">
+                <button class="icon-btn" onclick="modifySelection('front')" title="Bring to Front" style="width:30px; height:30px; padding:0;">
+                    <span class="material-symbols-rounded" style="font-size: 18px;">vertical_align_top</span>
+                </button>
+                <button class="icon-btn" onclick="modifySelection('back')" title="Send to Back" style="width:30px; height:30px; padding:0;">
+                    <span class="material-symbols-rounded" style="font-size: 18px;">vertical_align_bottom</span>
+                </button>
+            </div>
+            <button class="icon-btn" onclick="modifySelection('delete')" title="Delete" style="width:100%; height:30px; margin-top: 5px; color:#ff6b6b; justify-content: center;">
+                <span class="material-symbols-rounded" style="font-size: 20px;">delete</span>
             </button>
-            <button class="icon-btn" onclick="modifySelection('front')" title="Bring to Front">
-                <span class="material-symbols-rounded">vertical_align_top</span>
-            </button>
-            <button class="icon-btn" onclick="modifySelection('back')" title="Send to Back">
-                <span class="material-symbols-rounded">vertical_align_bottom</span>
-            </button>
-             <input type="color" id="prop-color" title="Change Color" onchange="modifySelection('color', this.value)">
         </div>
 
-        <!-- toolssection Options Popovers -->
+        <!-- Toolbar Options Popovers -->
         <div class="tool-options" id="draw-options">
-            <input type="color" id="draw-color" value="#ffffff">
-            <input type="range" id="draw-width" min="1" max="50" value="5" style="width: 100px;">
+            <input type="color" id="draw-color" value="#ffffff" title="Brush Color">
+            <input type="range" id="draw-width" min="1" max="50" value="5" style="width: 100px;" title="Brush Size">
         </div>
         
-        <div class="tool-options" id="note-options">
-             <div onclick="setStickyColor('#ffeb3b')" style="width:24px;height:24px;background:#ffeb3b;border-radius:50%;cursor:pointer;border:1px solid #ccc;"></div>
-             <div onclick="setStickyColor('#a7ffeb')" style="width:24px;height:24px;background:#a7ffeb;border-radius:50%;cursor:pointer;border:1px solid #ccc;"></div>
-             <div onclick="setStickyColor('#f8bbd0')" style="width:24px;height:24px;background:#f8bbd0;border-radius:50%;cursor:pointer;border:1px solid #ccc;"></div>
-             <div onclick="setStickyColor('#212121')" style="width:24px;height:24px;background:#212121;border-radius:50%;cursor:pointer;border:1px solid #666;"></div>
+        <div class="tool-options" id="line-options">
+            <input type="color" id="line-color" value="#ffffff" title="Line Color">
+            <input type="range" id="line-width" min="1" max="20" value="3" style="width: 100px;" title="Line Width">
+        </div>
+
+        <div class="tool-options" id="shape-options">
+            <select id="shape-type" style="padding: 5px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--glass-bg); color: var(--text-color);">
+                <option value="rect">Rectangle</option>
+                <option value="circle">Circle</option>
+                <option value="triangle">Triangle</option>
+                <option value="pentagon">Pentagon</option>
+                <option value="octagon">Octagon</option>
+            </select>
+            <div style="display:flex; flex-direction:column; gap:2px; align-items:center;">
+                <label style="font-size:10px;">Fill</label>
+                <input type="color" id="shape-fill" value="#333333">
+            </div>
+            <div style="display:flex; flex-direction:column; gap:2px; align-items:center;">
+                <label style="font-size:10px;">Stroke</label>
+                <input type="color" id="shape-stroke" value="#ffffff">
+            </div>
+            <input type="range" id="shape-stroke-width" min="0" max="20" value="2" style="width: 80px;" title="Stroke Width">
         </div>
 
         <!-- Main toolssection -->
         <div class="toolssection">
-            <button class="icon-btn active" onclick="setMode('select')" id="btn-select">
+            <button class="icon-btn active" onclick="setMode('select')" id="btn-select" title="Select">
                 <span class="material-symbols-rounded">arrow_selector_tool</span>
             </button>
-            <button class="icon-btn" onclick="setMode('draw')" id="btn-draw" oncontextmenu="toggleOptions('draw-options'); return false;">
+            <button class="icon-btn" onclick="setMode('draw')" id="btn-draw" oncontextmenu="toggleOptions('draw-options'); return false;" title="Draw">
                 <span class="material-symbols-rounded">ink_pen</span>
             </button>
-             <button class="icon-btn" onclick="setMode('shape')" id="btn-shape">
+            <button class="icon-btn" onclick="setMode('eraser')" id="btn-eraser" title="Eraser">
+                <span class="material-symbols-rounded">ink_eraser</span>
+            </button>
+            <button class="icon-btn" onclick="setMode('line')" id="btn-line" oncontextmenu="toggleOptions('line-options'); return false;" title="Line">
+                <span class="material-symbols-rounded">horizontal_rule</span>
+            </button>
+            <button class="icon-btn" onclick="setMode('shape')" id="btn-shape" oncontextmenu="toggleOptions('shape-options'); return false;" title="Shapes">
                 <span class="material-symbols-rounded">shapes</span>
             </button>
-            <button class="icon-btn" onclick="createStickyNote()" id="btn-note" oncontextmenu="toggleOptions('note-options'); return false;">
+            <button class="icon-btn" onclick="createStickyNote()" id="btn-note" title="Sticky Note">
                 <span class="material-symbols-rounded">sticky_note_2</span>
             </button>
-            <button class="icon-btn" onclick="addText()" id="btn-text">
+            <button class="icon-btn" onclick="addText()" id="btn-text" title="Text">
                 <span class="material-symbols-rounded">text_fields</span>
             </button>
-            <button class="icon-btn" onclick="importImage()" id="btn-img">
+            <button class="icon-btn" onclick="importImage()" id="btn-img" title="Image">
                 <span class="material-symbols-rounded">image</span>
             </button>
-             <button class="icon-btn" onclick="toggleGrid()" id="btn-grid">
-                <span class="material-symbols-rounded">grid_4x4</span>
+             <button class="icon-btn" onclick="toggleGrid()" id="btn-grid" title="Grid">
+                <span class="material-symbols-rounded">grid_3x3</span>
             </button>
         </div>
     </div>
@@ -349,17 +405,27 @@
         let isGridEnabled = true;
         let stickyColor = '#ffeb3b';
         let currentPages = [];
+        
+        // History State
+        let history = [];
+        let historyIndex = -1;
+        let historyProcessing = false;
 
         // --- Fabric Initialization ---
         function initCanvas() {
             canvas = new fabric.Canvas('c', {
                 width: window.innerWidth,
                 height: window.innerHeight,
-                backgroundColor: 'transparent', // Using CSS pattern
+                backgroundColor: 'transparent',
                 isDrawingMode: false,
                 fireRightClick: true,
                 stopContextMenu: true
             });
+            
+            // History Listeners
+            canvas.on('object:added', (e) => saveHistory());
+            canvas.on('object:modified', (e) => saveHistory());
+            canvas.on('object:removed', (e) => saveHistory());
             
             // Touch Gesture Logic (Infinite Pan/Zoom)
             canvas.on('mouse:wheel', function(opt) {
@@ -374,15 +440,41 @@
                 updateGrid();
             });
 
-            // Touch Panning (Two fingers or Alt)
+            // Input Handling (Pan, Line Tool, Shape Draw)
             let isDragging = false;
+            let isDrawingShape = false;
+            let shapeObj = null;
             let lastPosX, lastPosY;
 
             canvas.on('mouse:down', function(opt) {
                 var evt = opt.e;
-                if (opt.target && !isAltDown(evt)) return; // Hit object? Don't pan unless override
-                
-                // Allow panning if holding Alt or touch interactions on bg
+                const ptr = canvas.getPointer(evt);
+
+                // Line Tool Logic
+                if (mode === 'line') {
+                    isDrawingShape = true;
+                    const points = [ptr.x, ptr.y, ptr.x, ptr.y];
+                    shapeObj = new fabric.Line(points, {
+                        strokeWidth: parseInt(document.getElementById('line-width').value),
+                        stroke: document.getElementById('line-color').value,
+                        originX: 'center', originY: 'center'
+                    });
+                    canvas.add(shapeObj);
+                    canvas.requestRenderAll();
+                    return;
+                }
+
+                // Shape Tool Logic (Click to place or Drag to draw?)
+                // Implementation: Click to place at pointer for simplicity, or simple drag
+                if (mode === 'shape') {
+                     // Just place it on click to keep touch simple
+                     createShapeAt(ptr.x, ptr.y);
+                     setMode('select'); // Auto-switch back
+                     return;
+                }
+
+                // Pan Logic
+                if (opt.target && !isAltDown(evt) && !canvas.isDrawingMode) return; 
                 if (isAltDown(evt) || (!opt.target && !canvas.isDrawingMode)) {
                     isDragging = true;
                     canvas.selection = false;
@@ -392,6 +484,14 @@
             });
 
             canvas.on('mouse:move', function(opt) {
+                const ptr = canvas.getPointer(opt.e);
+                
+                if (isDrawingShape && mode === 'line') {
+                    shapeObj.set({ x2: ptr.x, y2: ptr.y });
+                    canvas.requestRenderAll();
+                    return;
+                }
+
                 if (isDragging) {
                     var e = opt.e;
                     var clientX = e.clientX || e.touches[0].clientX;
@@ -407,6 +507,12 @@
             });
 
             canvas.on('mouse:up', function() {
+                if (isDrawingShape) {
+                    isDrawingShape = false;
+                    shapeObj.setCoords();
+                    saveHistory();
+                }
+                
                 canvas.setViewportTransform(canvas.viewportTransform);
                 isDragging = false;
                 canvas.selection = true;
@@ -422,6 +528,43 @@
             });
 
             updateGrid();
+        }
+
+        // --- History System ---
+        function saveHistory() {
+            if (historyProcessing) return;
+            // Limit history
+            if (history.length > 10) history.shift();
+            // Remove redo steps if we do something new
+            if (historyIndex < history.length - 1) {
+                history.splice(historyIndex + 1);
+            }
+            history.push(JSON.stringify(canvas.toDatalessJSON()));
+            historyIndex = history.length - 1;
+        }
+
+        function undo() {
+            if (historyIndex > 0) {
+                historyProcessing = true;
+                historyIndex--;
+                canvas.clear();
+                canvas.loadFromJSON(JSON.parse(history[historyIndex]), () => {
+                    canvas.renderAll();
+                    historyProcessing = false;
+                });
+            }
+        }
+
+        function redo() {
+            if (historyIndex < history.length - 1) {
+                historyProcessing = true;
+                historyIndex++;
+                canvas.clear();
+                canvas.loadFromJSON(JSON.parse(history[historyIndex]), () => {
+                    canvas.renderAll();
+                    historyProcessing = false;
+                });
+            }
         }
 
         function isAltDown(evt) { return evt.altKey || (evt.touches && evt.touches.length === 2); }
@@ -455,88 +598,110 @@
             updateGrid();
         }
 
-        // --- Tools Logic ---
+        // --- Tools & Modes ---
         function setMode(newMode) {
             mode = newMode;
-            canvas.isDrawingMode = (mode === 'draw');
+            canvas.isDrawingMode = false;
             
-            document.querySelectorAll('.toolssection .icon-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.toolbar .icon-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('btn-' + newMode).classList.add('active');
             
             document.querySelectorAll('.tool-options').forEach(o => o.classList.remove('show'));
 
             if (mode === 'draw') {
-                document.getElementById('draw-options').classList.add('show');
+                canvas.isDrawingMode = true;
                 canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+                document.getElementById('draw-options').classList.add('show');
                 updateDrawSettings();
-            } else if (mode === 'note') {
-                // Not a mode persay, trigger and return to select
+            } else if (mode === 'eraser') {
+                 canvas.isDrawingMode = true;
+                 canvas.freeDrawingBrush = new fabric.EraserBrush(canvas);
+                 canvas.freeDrawingBrush.width = 20;
+            } else if (mode === 'line') {
+                 document.getElementById('line-options').classList.add('show');
+                 canvas.selection = false;
             } else if (mode === 'shape') {
-                addShape();
-                setMode('select');
+                 document.getElementById('shape-options').classList.add('show');
             }
         }
 
-        // --- Shape Implementation ---
-        function addShape() {
-             // Basic implementation: Rectangle or Arrow
-             const rect = new fabric.Rect({
-                left: -canvas.viewportTransform[4] / canvas.getZoom() + canvas.width/2/canvas.getZoom() - 50,
-                top: -canvas.viewportTransform[5] / canvas.getZoom() + canvas.height/2/canvas.getZoom() - 50,
-                width: 100, height: 100, fill: 'transparent', stroke: document.body.classList.contains('light-theme')?'#000':'#fff', strokeWidth: 2
-             });
-             canvas.add(rect);
-             canvas.setActiveObject(rect);
+        // --- Shapes ---
+        function createShapeAt(x, y) {
+            const type = document.getElementById('shape-type').value;
+            const fill = document.getElementById('shape-fill').value;
+            const stroke = document.getElementById('shape-stroke').value;
+            const strokeWidth = parseInt(document.getElementById('shape-stroke-width').value);
+            
+            let shape;
+            const opts = { left: x, top: y, fill: fill, stroke: stroke, strokeWidth: strokeWidth, originX: 'center', originY: 'center' };
+            
+            if (type === 'rect') shape = new fabric.Rect({ ...opts, width: 100, height: 100 });
+            else if (type === 'circle') shape = new fabric.Circle({ ...opts, radius: 50 });
+            else if (type === 'triangle') shape = new fabric.Triangle({ ...opts, width: 100, height: 100 });
+            else if (type === 'pentagon') shape = new fabric.Polygon([
+                {x: 50, y: 0}, {x: 98, y: 35}, {x: 79, y: 90}, {x: 21, y: 90}, {x: 2, y: 35}
+            ], opts);
+            else if (type === 'octagon') shape = new fabric.Polygon([
+                {x:30,y:0}, {x:70,y:0}, {x:100,y:30}, {x:100,y:70}, {x:70,y:100}, {x:30,y:100}, {x:0,y:70}, {x:0,y:30}
+            ], opts);
+            
+            canvas.add(shape);
+            canvas.setActiveObject(shape);
+            saveHistory();
         }
-        
-        // --- Arrow/Line Logic (Custom) ---
-        // Skipping complex arrow logic for brevity, implementing simple line
-        // A robust "shape" menu would replace the immediate rect above.
 
-        // --- Sticky Note Implementation ---
+        // --- Sticky Notes ---
         function createStickyNote() {
             setMode('select');
             const center = canvas.getCenter();
-            // Invert logic to place in view relative to panning
-            const pan = canvas.viewportTransform;
-            const x = (center.left - pan[4]) / canvas.getZoom();
-            const y = (center.top - pan[5]) / canvas.getZoom();
+            // Correct logic to find center of Viewport
+            const vpt = canvas.viewportTransform;
+            const x = (-vpt[4] + canvas.width/2) / canvas.getZoom();
+            const y = (-vpt[5] + canvas.height/2) / canvas.getZoom();
 
-            const group = new fabric.Group([], { left: x - 75, top: y - 75 });
+            // Default Font
+            const fontFamily = 'Inter'; 
             
             const rect = new fabric.Rect({
                 width: 150, height: 150,
                 fill: stickyColor,
-                shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.2)', blur: 10, offsetX: 5, offsetY: 5 }),
+                strokeWidth: 0,
+                originX: 'center', originY: 'center',
                 rx: 5, ry: 5
             });
             
-            const text = new fabric.IText('New Note', {
-                fontFamily: 'Nanum Pen Script, Inter, cursive',
+            const text = new fabric.IText('Note', {
+                fontFamily: fontFamily,
                 fontSize: 20,
                 fill: (stickyColor === '#212121') ? '#fff' : '#333',
-                left: 10, top: 10,
+                originX: 'center', originY: 'center',
                 width: 130,
                 splitByGrapheme: true
             });
             
-            group.addWithUpdate(rect);
-            group.addWithUpdate(text);
+            const group = new fabric.Group([rect, text], { left: x, top: y });
+            // Tag object for identification
+            group.isStickyNote = true;
+            
             canvas.add(group);
             canvas.setActiveObject(group);
+            saveHistory();
         }
-
-        function setStickyColor(c) { stickyColor = c; createStickyNote(); }
 
         function addText() {
             setMode('select');
+            const vpt = canvas.viewportTransform;
+            const x = (-vpt[4] + canvas.width/2) / canvas.getZoom();
+            const y = (-vpt[5] + canvas.height/2) / canvas.getZoom();
+            
             const text = new fabric.IText('Type here', {
-                left: 100, top: 100,
+                left: x, top: y,
                 fontFamily: 'Inter', fontSize: 24,
                 fill: document.body.classList.contains('light-theme') ? '#000' : '#fff'
             });
             canvas.add(text);
             canvas.setActiveObject(text);
+            saveHistory();
         }
 
         // --- Draw Settings ---
@@ -577,32 +742,76 @@
             });
         }
         
-        // --- Props Logic ---
+        // --- Properties & Modifications ---
         function showProps() {
             const active = canvas.getActiveObject();
-            const panel = document.getElementById('prop-panel');
-            panel.classList.add('show');
+            if (!active) return;
+            document.getElementById('prop-panel').classList.add('show');
             
-            const colorIn = document.getElementById('prop-color');
-            if (active.fill && typeof active.fill === 'string') colorIn.value = active.fill;
+            // Populate fields based on selection
+            // Colors
+            if (active.fill && typeof active.fill === 'string') {
+                document.getElementById('prop-fill').value = active.fill;
+            } else if (active.isStickyNote) {
+                // Group item 0 is rect
+                document.getElementById('prop-fill').value = active.item(0).fill;
+            }
+            
+            if (active.stroke) {
+                 document.getElementById('prop-stroke').value = active.stroke;
+            }
+            if (active.strokeWidth !== undefined) {
+                 document.getElementById('prop-stroke-width').value = active.strokeWidth;
+            }
+            
+            // Fonts
+            let font = 'Inter';
+            if (active.type === 'i-text') font = active.fontFamily;
+            else if (active.isStickyNote) font = active.item(1).fontFamily;
+            
+            document.getElementById('prop-font').value = font;
         }
+        
         function hideProps() { document.getElementById('prop-panel').classList.remove('show'); }
 
-        function modifySelection(action, val) {
+        function modifySelection(attr, val) {
             const active = canvas.getActiveObject();
-            if(!active) return;
+            if (!active) return;
             
-            if (action === 'delete') canvas.remove(active);
-            if (action === 'front') active.bringToFront();
-            if (action === 'back') active.sendToBack();
-            if (action === 'color') {
-                if(active.type === 'i-text' || active.type === 'rect' || active.type === 'path') {
-                    active.set('fill', val);
-                } else if (active.type === 'group') {
-                    // Primitive coloring for notes (item 0 usually rect)
-                     active.getObjects()[0].set('fill', val);
+            if (attr === 'delete') {
+                canvas.remove(active);
+                hideProps();
+            } else if (attr === 'front') {
+                active.bringToFront();
+            } else if (attr === 'back') {
+                active.sendToBack();
+            } else if (attr === 'fill') {
+                if (active.isStickyNote) active.item(0).set('fill', val);
+                else active.set('fill', val);
+            } else if (attr === 'stroke') {
+                active.set('stroke', val);
+            } else if (attr === 'strokeWidth') {
+                active.set('strokeWidth', parseInt(val));
+            } else if (attr === 'fontFamily') {
+                if (active.isStickyNote) active.item(1).set('fontFamily', val);
+                else if (active.type === 'i-text') active.set('fontFamily', val);
+            }
+            
+            canvas.requestRenderAll();
+            saveHistory();
+        }
+        
+        async function deletePage(id, e) {
+            if (e) e.stopPropagation();
+            if (await Gurasuraisu.showConfirm("Delete this page?")) {
+                await db.pages.delete(id);
+                loadPages(currentSpaceId);
+                // If current page deleted, load another
+                if (id === currentPageId) {
+                    const remaining = await db.pages.where('spaceId').equals(currentSpaceId).toArray();
+                    if (remaining.length > 0) switchToPage(remaining[0].id);
+                    else addPage(); // Always have one
                 }
-                canvas.requestRenderAll();
             }
         }
 
@@ -681,12 +890,14 @@
             
             currentPages.forEach((p, index) => {
                 const row = document.createElement('div');
-                row.className = `page-item ${index===0 ? 'active' : ''}`; // Default to first for loading ui logic
-                row.innerText = p.title;
-                row.onclick = () => switchToPage(p.id);
+                row.className = `page-item ${index===0 ? 'active' : ''}`;
+                row.innerHTML = `
+                    <span onclick="switchToPage(${p.id})" style="flex-grow:1; overflow:hidden; text-overflow:ellipsis;">${p.title}</span>
+                    <span class="material-symbols-rounded" onclick="deletePage(${p.id}, event)" style="font-size:16px; opacity:0.5; cursor:pointer;">cancel</span>
+                `;
                 listEl.appendChild(row);
             });
-
+            
             // Open first page
             if (currentPages.length > 0) switchToPage(currentPages[0].id);
         }
