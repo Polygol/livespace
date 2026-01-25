@@ -45,6 +45,7 @@
             corner-shape: round;
             backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
             color: var(--text-color);
+            box-shadow: var(--sun-shadow);
             padding: 10px;
             display: flex;
             align-items: center;
@@ -110,7 +111,7 @@
         }
 
         /* --- WORKSPACE VIEW --- */
-        #workspace-view { overflow: hidden; background-color: var(--background-color); }
+        #workspace-view { overflow: hidden; background-color: var(--background-mono); }
         
         #canvas-container { flex: 1; position: relative; width: 100%; height: 100%; overflow: hidden; cursor: crosshair; }
         
