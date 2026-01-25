@@ -380,6 +380,9 @@
 
         <!-- Main toolssection -->
         <div class="toolssection">
+            <button class="icon-btn" onclick="setMode('pan')" id="btn-pan" title="Pan">
+                <span class="material-symbols-rounded">drag_pan</span>
+            </button>
             <button class="icon-btn active" onclick="setMode('select')" id="btn-select" title="Select">
                 <span class="material-symbols-rounded">arrow_selector_tool</span>
             </button>
@@ -541,12 +544,15 @@
                 }
 
                 // Pan Logic
-                if (opt.target && !isAltDown(evt) && !canvas.isDrawingMode) return; 
-                if (isAltDown(evt) || (!opt.target && !canvas.isDrawingMode)) {
+                const isPanMode = mode === 'pan';
+                if (!isPanMode && opt.target && !isAltDown(evt) && !canvas.isDrawingMode) return; 
+                
+                if (isPanMode || isAltDown(evt) || (!opt.target && !canvas.isDrawingMode)) {
                     isDragging = true;
                     canvas.selection = false;
                     lastPosX = evt.clientX || evt.touches[0].clientX;
                     lastPosY = evt.clientY || evt.touches[0].clientY;
+                    if (isPanMode) canvas.setCursor('grabbing');
                 }
             });
 
@@ -582,7 +588,13 @@
                 
                 canvas.setViewportTransform(canvas.viewportTransform);
                 isDragging = false;
-                canvas.selection = true;
+                
+                if (mode === 'pan') {
+                    canvas.setCursor('grab');
+                    canvas.selection = false;
+                } else {
+                    canvas.selection = true;
+                }
             });
 
             canvas.on('selection:created', showProps);
@@ -685,6 +697,11 @@
             mode = newMode;
             canvas.isDrawingMode = false;
             
+            // Reset Generic Defaults
+            canvas.skipTargetFind = false;
+            canvas.selection = true;
+            canvas.defaultCursor = 'default';
+
             document.querySelectorAll('.toolssection .icon-btn').forEach(b => b.classList.remove('active'));
             const btn = document.getElementById('btn-' + newMode);
             if(btn) btn.classList.add('active');
@@ -692,7 +709,13 @@
             // Hide all options first
             document.querySelectorAll('.tool-options').forEach(o => o.classList.remove('show'));
 
-            if (mode === 'draw') {
+            if (mode === 'pan') {
+                canvas.skipTargetFind = true;
+                canvas.selection = false;
+                canvas.defaultCursor = 'grab';
+                canvas.discardActiveObject();
+                canvas.requestRenderAll();
+            } else if (mode === 'draw') {
                 canvas.isDrawingMode = true;
                 canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
                 updateDrawSettings();
@@ -704,9 +727,6 @@
                  canvas.selection = false;
             }
             
-            // Show options for the mode automatically if switching to it
-            /* Optional: To keep UI clean, we can choose NOT to show immediately, or show. 
-               Let's show them to replace the right-click behavior. */
             const map = {
                 'draw': 'draw-options',
                 'eraser': 'eraser-options',
