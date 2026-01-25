@@ -1059,26 +1059,32 @@
                 return;
             }
             
-            const originalTitle = document.getElementById('current-space-name').innerText;
             Gurasuraisu.showPopup('Exporting as PDF');
             await saveCurrentPage(true);
             
+            const originalBg = canvas.backgroundColor;
+            
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ unit: 'px' });
+            const doc = new jsPDF({ unit: 'px', hotfixes: ["px_scaling"] });
+            doc.deletePage(1); // Remove default starting page
             
             const pages = await db.pages.where('spaceId').equals(currentSpaceId).sortBy('order');
-            const originalBg = canvas.backgroundColor;
-            canvas.backgroundColor = '#ffffff';
             
             try {
                 for (let i = 0; i < pages.length; i++) {
                     const page = pages[i];
+                    
+                    // 1. Load Page Data Cleanly
                     await new Promise(resolve => {
                         canvas.clear();
-                        if (page.data && page.data.objects) canvas.loadFromJSON(page.data, resolve);
-                        else resolve();
+                        canvas.setBackgroundColor('#ffffff', () => { 
+                             if (page.data && page.data.objects) canvas.loadFromJSON(page.data, resolve);
+                             else resolve();
+                        });
                     });
-                    canvas.renderAll();
+                    
+                    // 2. Reset Viewport to Identity (1:1) for accurate bound calculation
+                    canvas.setViewportTransform([1,0,0,1,0,0]);
                     
                     const objects = canvas.getObjects();
                     let x = 0, y = 0, w = 800, h = 600;
@@ -1095,36 +1101,59 @@
                         const padding = 50;
                         x = minX - padding;
                         y = minY - padding;
-                        w = maxX - minX + (padding * 2);
-                        h = maxY - minY + (padding * 2);
+                        w = (maxX - minX) + (padding * 2);
+                        h = (maxY - minY) + (padding * 2);
                     }
                     
+                    // 3. Smart Quality Scaling (Aim for 4K / ~4000px)
+                    // Caps at 5000px to prevent browser crash (Blank Page Bug)
+                    const maxDim = Math.max(w, h);
+                    let multiplier = 3840 / maxDim; // Attempt to scale to 4K
+                    
+                    // Cap max dimension to ~5000px to be safe on mobile/browsers
+                    if (maxDim * multiplier > 5000) multiplier = 5000 / maxDim;
+                    
+                    // Ensure at least 2x scale if content is small and fits in cap
+                    if (multiplier < 2 && maxDim * 2 <= 5000) multiplier = 2;
+                    
+                    canvas.renderAll();
+                    
+                    // 4. Generate High Quality Bitmap
                     const data = canvas.toDataURL({
                         format: 'jpeg',
-                        quality: 0.95,
-                        multiplier: 3,
+                        quality: 1.0,
+                        multiplier: multiplier,
                         left: x, top: y, width: w, height: h
                     });
                     
+                    // 5. Add to PDF
                     const orientation = w > h ? 'landscape' : 'portrait';
                     doc.addPage([w, h], orientation);
                     doc.addImage(data, 'JPEG', 0, 0, w, h);
                 }
                 
-                if (doc.getNumberOfPages() > 1) doc.deletePage(1);
                 window.open(doc.output('bloburl'), '_blank');
                 
             } catch (err) {
-                console.error(err);
-                Gurasuraisu.showAlert('Failed to export as PDF');
+                console.error("PDF Export Failed:", err);
+                Gurasuraisu.showAlert('The page may be too large.', 'Exporting PDF failed');
             } finally {
+                // Restore Original State
                 canvas.backgroundColor = originalBg;
                 document.getElementById('current-space-name').innerText = originalTitle;
+                
+                // Reload current page to restore view
                 const curr = pages.find(p => p.id === currentPageId);
-                if(curr && curr.data) canvas.loadFromJSON(curr.data, () => {
-                    canvas.renderAll();
+                if(curr && curr.data) {
+                    canvas.clear();
+                    canvas.loadFromJSON(curr.data, () => {
+                         canvas.renderAll();
+                         resetZoom();
+                    });
+                } else {
+                    canvas.clear();
                     resetZoom();
-                });
+                }
             }
         }
 
