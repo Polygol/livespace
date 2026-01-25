@@ -218,7 +218,7 @@
             <button class="icon-btn" onclick="exitWorkspace()" style="border-radius: 50%; width: 32px; height: 32px;">
                 <span class="material-symbols-rounded" style="font-size: 20px;">arrow_back</span>
             </button>
-            <div class="space-name" id="current-space-name">Untitled</div>
+            <div class="space-name" id="current-space-name" onclick="renameCurrentSpace()" style="cursor: pointer;">Untitled</div>
             <button class="icon-btn" onclick="saveCurrentPage()" style="border-radius: 50%; width: 32px; height: 32px;">
                 <span class="material-symbols-rounded" style="font-size: 20px;">save</span>
             </button>
@@ -532,13 +532,15 @@
                             img.scaleToWidth(200);
                             canvas.add(img);
                             canvas.setActiveObject(img);
+                            canvas.renderAll();
+                            saveCurrentPage(true); // Auto-save after import
                         });
                     };
                     reader.readAsDataURL(files[0]);
                 }
             });
         }
-
+        
         // --- Props Logic ---
         function showProps() {
             const active = canvas.getActiveObject();
@@ -586,7 +588,7 @@
                     </div>
                     <h3>${space.title}</h3>
                     <div class="meta">${new Date(space.createdAt).toLocaleDateString()}</div>
-                    <button class="space-delete" onclick="deleteSpace(${space.id}, event)"><span class="material-symbols-rounded" style="font-size: 18px;">cancel</span></button>
+                    <button class="space-delete" onclick="deleteSpace(${space.id}, '${space.title.replace(/'/g, "\\'")}', event)"><span class="material-symbols-rounded" style="padding: 10px; font-size: 18px;">cancel</span></button>
                 `;
                 container.appendChild(el);
             });
@@ -599,15 +601,25 @@
             loadHome();
         }
         
-        async function deleteSpace(id, e) {
-            e.stopPropagation(); // prevent open
-            if(confirm("Delete this space?")) {
+        async function deleteSpace(id, title, e) {
+            if (e) e.stopPropagation();
+            const confirmed = await Gurasuraisu.showConfirm(`Are you sure you want to delete "${title}" and all its pages?`);
+            if (confirmed) {
                 await db.spaces.delete(id);
                 await db.pages.where('spaceId').equals(id).delete();
                 loadHome();
             }
         }
-
+        
+        async function renameCurrentSpace() {
+            const space = await db.spaces.get(currentSpaceId);
+            const newName = await Gurasuraisu.showPrompt("Enter new name for this space:", "Rename Space", space.title);
+            if (newName && newName.trim() !== "") {
+                await db.spaces.update(currentSpaceId, { title: newName.trim() });
+                document.getElementById('current-space-name').innerText = newName.trim();
+            }
+        }        
+        
         async function openSpace(id, title) {
             currentSpaceId = id;
             document.getElementById('current-space-name').innerText = title;
@@ -655,32 +667,48 @@
             switchToPage(id);
         }
 
-        async function saveCurrentPage() {
+        async function saveCurrentPage(silent = false) {
             if (!currentPageId || !canvas) return;
-            const json = canvas.toDatalessJSON();
-            await db.pages.update(currentPageId, { data: json });
-            Gurasuraisu.showPopup('Saved');
+            try {
+                // Use toObject() for a cleaner data structure in IndexedDB
+                const data = canvas.toObject();
+                await db.pages.update(currentPageId, { data: data });
+                if (!silent) Gurasuraisu.showPopup('Saved');
+            } catch (err) {
+                console.error("Save failed:", err);
+            }
         }
 
         async function switchToPage(pageId) {
-            if(currentPageId) {
-                 // Save prev page in background
-                 const prevData = canvas.toDatalessJSON();
-                 await db.pages.update(currentPageId, { data: prevData });
+            if (currentPageId === pageId) return;
+        
+            if (currentPageId) {
+                // Ensure previous page is saved before switching
+                const prevData = canvas.toObject();
+                await db.pages.update(currentPageId, { data: prevData });
             }
             
             currentPageId = pageId;
-            // UI Update
-            Array.from(document.getElementById('pages-container').children).forEach((c, i) => {
-               if (currentPages[i].id === pageId) c.classList.add('active');
-               else c.classList.remove('active');
+            
+            // UI Update for active state
+            const items = document.getElementById('pages-container').children;
+            const pageArr = await db.pages.where('spaceId').equals(currentSpaceId).sortBy('order');
+            Array.from(items).forEach((c, i) => {
+                if (pageArr[i].id === pageId) c.classList.add('active');
+                else c.classList.remove('active');
             });
             
             const page = await db.pages.get(pageId);
             if (page && page.data && page.data.objects) {
-                canvas.loadFromJSON(page.data, canvas.renderAll.bind(canvas));
+                // Clear canvas and load new data
+                canvas.clear();
+                canvas.loadFromJSON(page.data, () => {
+                    canvas.renderAll();
+                    resetZoom();
+                });
             } else {
                 canvas.clear();
+                resetZoom();
             }
         }
 
