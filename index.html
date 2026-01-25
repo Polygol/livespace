@@ -40,7 +40,9 @@
         .side-panel-btn {
             background-color: var(--search-background);
             border: 1px solid var(--glass-border);
-            border-radius: 35px; corner-shape: superellipse(1.5);
+            aspect-ratio: 1 / 1;
+            border-radius: 50px;
+            corner-shape: round;
             backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
             color: var(--text-color);
             padding: 10px;
@@ -108,7 +110,7 @@
         }
 
         /* --- WORKSPACE VIEW --- */
-        #workspace-view { overflow: hidden; }
+        #workspace-view { overflow: hidden; background-color: var(--background-color); }
         
         #canvas-container { flex: 1; position: relative; width: 100%; height: 100%; overflow: hidden; cursor: crosshair; }
         
@@ -427,13 +429,11 @@
             const vpt = canvas ? canvas.viewportTransform : [1,0,0,1,0,0];
             const offX = vpt[4];
             const offY = vpt[5];
-            
-            const color = document.body.classList.contains('light-theme') ? '#ccc' : '#444';
-            
+                        
             document.getElementById('canvas-container').style.backgroundSize = `${size}px ${size}px`;
             document.getElementById('canvas-container').style.backgroundPosition = `${offX}px ${offY}px`;
             document.getElementById('canvas-container').style.backgroundImage = 
-                `radial-gradient(circle, ${color} 1px, transparent 1px)`;
+                `radial-gradient(circle, var(--search-background-op) 1px, transparent 1px)`;
         }
 
         function toggleGrid() {
