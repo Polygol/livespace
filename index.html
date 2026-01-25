@@ -39,8 +39,6 @@
             transition: transform 0.2s, background 0.2s;
             box-shadow: var(--sun-shadow);
         }
-        .icon-btn:active { transform: scale(0.95); }
-        .icon-btn.active { background: var(--accent); color: var(--background-color); }
         .material-symbols-rounded { font-size: 24px; }
 
         /* VIEWS */
@@ -177,7 +175,7 @@
 
         .new-btn-fab {
             position: fixed; bottom: 25px; right: 25px;
-            background: var(--text-color); color: var(--accent);
+            background: var(--text-color); color: var(--background-color);
             border-radius: 35px; corner-shape: superellipse(1.5);
             backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
             width: 60px; height: 60px;
@@ -251,7 +249,7 @@
         <!-- Selection Properties (Contextual) -->
         <div class="prop-panel" id="prop-panel">
             <button class="icon-btn" onclick="modifySelection('delete')" title="Delete">
-                <span class="material-symbols-rounded" style="color:#ff6b6b;">delete</span>
+                <span class="material-symbols-rounded" style="color:#ff6b6b;">cancel</span>
             </button>
             <button class="icon-btn" onclick="modifySelection('front')" title="Bring to Front">
                 <span class="material-symbols-rounded">vertical_align_top</span>
@@ -592,7 +590,7 @@
                     </div>
                     <h3>${space.title}</h3>
                     <div class="meta">${new Date(space.createdAt).toLocaleDateString()}</div>
-                    <button class="space-delete" onclick="deleteSpace(${space.id}, event)"><span class="material-symbols-rounded">delete</span></button>
+                    <button class="space-delete" onclick="deleteSpace(${space.id}, event)"><span class="material-symbols-rounded" style="font-size: 18px;">cancel</span></button>
                 `;
                 container.appendChild(el);
             });
