@@ -1033,7 +1033,7 @@
             saveCurrentPage().then(loadHome);
         }
         
-        function exportPDF() {
+        async function exportPDF() {
             if (!window.jspdf) {
                 Gurasuraisu.showAlert('Ensure you are connected to the internet.', 'Cannot export as PDF');
                 return;
