@@ -223,19 +223,6 @@
     </style>
 </head>
 <body data-app-name="LIVESPACE">
-
-    <!-- Glass Effect SVG -->
-    <svg>
-        <filter id="edge-refraction-only" color-interpolation-filters="sRGB">
-            <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" result="turbulence"></feTurbulence>
-            <feMorphology in="SourceGraphic" operator="erode" radius="4" result="eroded"></feMorphology>
-            <feComposite in="SourceGraphic" in2="eroded" operator="out" result="border_mask"></feComposite>
-            <feComposite in="turbulence" in2="border_mask" operator="in" result="edge_turbulence"></feComposite>
-            <feDisplacementMap in="SourceGraphic" in2="edge_turbulence" scale="15" result="disp"></feDisplacementMap>
-            <feBlend in="disp" in2="SourceGraphic" mode="lighten"></feBlend>
-        </filter>
-    </svg>
-
     <!-- Home View -->
     <div id="home-view" class="view">
         <div class="header-bar">
