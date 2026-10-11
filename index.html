@@ -8,6 +8,58 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
     <script src="https://cdn.jsdelivr.net/gh/Polygol/polygol.github.io@main/assets/polygolapp/api/polygol-api.js"></script>
+    <script src="lang.js"></script>
+    <script>
+        const bcpMap = { EN: 'en-US', JP: 'ja-JP', KO: 'ko-KR', ZH: 'zh-CN' };
+        window.bcpMap = bcpMap;
+
+        function getAppLanguage() {
+            let l = (localStorage.getItem('language') || localStorage.getItem('selectedLanguage') || 'EN').toUpperCase();
+            if (l === 'JA') l = 'JP';
+            return ['EN', 'JP', 'KO', 'ZH'].includes(l) ? l : 'EN';
+        }
+
+        function t(key, params = {}) {
+            const lang = getAppLanguage();
+            const dict = window['LANG_' + lang + '_LIVESPACE'] || window['LANG_EN_LIVESPACE'] || {};
+            let str = dict[key] || key;
+            Object.keys(params).forEach(p => str = str.replace(new RegExp('\\{' + p + '\\}', 'g'), params[p]));
+            return str;
+        }
+
+        function applyLanguage(langCode) {
+            if (langCode) localStorage.setItem('language', langCode);
+            const lang = getAppLanguage();
+            document.documentElement.lang = (window.bcpMap || bcpMap)[lang] || 'en-US';
+            
+            document.querySelectorAll('[data-lang-key]').forEach(el => {
+                const k = el.getAttribute('data-lang-key');
+                if (k) {
+                    if (el.tagName === 'TITLE') document.title = t(k);
+                    else el.textContent = t(k);
+                }
+            });
+            
+            document.querySelectorAll('[data-lang-title]').forEach(el => {
+                const k = el.getAttribute('data-lang-title');
+                if (k) el.title = t(k);
+            });
+        }
+
+        window.addEventListener('message', (e) => {
+            if (e.data && (e.data.type === 'languageUpdate' || e.data.type === 'localeUpdate')) {
+                applyLanguage(e.data.languageCode);
+            }
+        });
+
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'language' || e.key === 'selectedLanguage') {
+                applyLanguage(e.newValue);
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', () => applyLanguage());
+    </script>
     <script src="fabric.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/3.2.4/dexie.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -990,7 +1042,7 @@
                 el.onclick = (e) => { if(e.target.tagName !== 'BUTTON') openSpace(space.id, space.title); };
                 el.innerHTML = `
                     <h3>${space.title}</h3>
-                    <div class="meta">${new Date(space.createdAt).toLocaleDateString(bcpMap[getAppLanguage()] || 'en-US')}</div>
+                    <div class="meta">${new Date(space.createdAt).toLocaleDateString((window.bcpMap || bcpMap)[getAppLanguage()] || 'en-US')}</div>
                     <button class="space-delete" onclick="deleteSpace(${space.id}, '${space.title.replace(/'./g, "\\'")}', event)"><span class="material-symbols-rounded" style="padding: 5px; font-size: 18px;">cancel</span></button>
                 `;
                 container.appendChild(el);
@@ -1155,6 +1207,8 @@
 
     </script>
 <script>
+const bcpMap = { EN: 'en-US', JP: 'ja-JP', KO: 'ko-KR', ZH: 'zh-CN' };
+window.bcpMap = bcpMap;
 function getAppLanguage() {
     let l = (localStorage.getItem('language') || localStorage.getItem('selectedLanguage') || 'EN').toUpperCase();
     if (l === 'JA') l = 'JP';
