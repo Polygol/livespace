@@ -964,7 +964,7 @@
         
         async function deletePage(id, e) {
             if (e) e.stopPropagation();
-            if (await Polygol.showConfirm("Delete this page?")) {
+            if (await Polygol.showConfirm(t("DELETE_PAGE_CONFIRM"))) {
                 await db.pages.delete(id);
                 loadPages(currentSpaceId);
                 // If current page deleted, load another
@@ -990,7 +990,7 @@
                 el.onclick = (e) => { if(e.target.tagName !== 'BUTTON') openSpace(space.id, space.title); };
                 el.innerHTML = `
                     <h3>${space.title}</h3>
-                    <div class="meta">${new Date(space.createdAt).toLocaleDateString()}</div>
+                    <div class="meta">${new Date(space.createdAt).toLocaleDateString(bcpMap[getAppLanguage()] || 'en-US')}</div>
                     <button class="space-delete" onclick="deleteSpace(${space.id}, '${space.title.replace(/'./g, "\\'")}', event)"><span class="material-symbols-rounded" style="padding: 5px; font-size: 18px;">cancel</span></button>
                 `;
                 container.appendChild(el);
@@ -998,15 +998,15 @@
         }
 
         async function createSpace() {
-            const id = await db.spaces.add({ title: 'New Space', createdAt: Date.now() });
+            const id = await db.spaces.add({ title: t('NEW_SPACE'), createdAt: Date.now() });
             // Create default page
-            await db.pages.add({ spaceId: id, title: 'Page 1', order: 0, data: {} });
+            await db.pages.add({ spaceId: id, title: `${t('PAGE')} 1`, order: 0, data: {} });
             loadHome();
         }
         
         async function deleteSpace(id, title, e) {
             if (e) e.stopPropagation();
-            const confirmed = await Polygol.showConfirm(`Are you sure you want to delete "${title}" and all its pages?`);
+            const confirmed = await Polygol.showConfirm(t('DELETE_SPACE_CONFIRM', {title: title}));
             if (confirmed) {
                 await db.spaces.delete(id);
                 await db.pages.where('spaceId').equals(id).delete();
@@ -1016,7 +1016,7 @@
         
         async function renameCurrentSpace() {
             const space = await db.spaces.get(currentSpaceId);
-            const newName = await Polygol.showPrompt("Enter new name for this space:", "Rename Space", space.title);
+            const newName = await Polygol.showPrompt(t("RENAME_SPACE_PROMPT"), t("RENAME_SPACE_TITLE"), space.title);
             if (newName && newName.trim() !== "") {
                 await db.spaces.update(currentSpaceId, { title: newName.trim() });
                 document.getElementById('current-space-name').innerText = newName.trim();
@@ -1043,7 +1043,7 @@
         
         function exportPDF() {
             if (!window.jspdf) {
-                Polygol.showAlert('Ensure you are connected to the internet.', 'Error');
+                Polygol.showAlert(t('CONNECT_INTERNET_ALERT'), t('ERROR'));
                 return;
             }
             const { jsPDF } = window.jspdf;
@@ -1107,7 +1107,7 @@
                 // Use toObject() for a cleaner data structure in IndexedDB
                 const data = canvas.toObject();
                 await db.pages.update(currentPageId, { data: data });
-                if (!silent) Polygol.showPopup('Saved');
+                if (!silent) Polygol.showPopup(t('SAVED'));
             } catch (err) {
                 console.error("Save failed:", err);
             }

@@ -1,5 +1,9 @@
 // Polygol Livespace Language Dictionary
-const LANG_EN_LIVESPACE = {
+window.LANG_EN_LIVESPACE = {
+    NEW_SPACE: "New Space",
+    PAGE: "Page",
+    RENAME_SPACE_TITLE: "Rename Space",
+    ERROR: "Error",
     TITLE: "Livespace",
     PAN: "Pan",
     SELECT: "Select",
@@ -29,10 +33,19 @@ const LANG_EN_LIVESPACE = {
     CIRCLE: "Circle",
     TRIANGLE: "Triangle",
     PENTAGON: "Pentagon",
-    OCTAGON: "Octagon"
+    OCTAGON: "Octagon",
+    DELETE_PAGE_CONFIRM: "Delete this page?",
+    DELETE_SPACE_CONFIRM: "Are you sure you want to delete \"{title}\" and all its pages?",
+    RENAME_SPACE_PROMPT: "Enter new name for this space:",
+    CONNECT_INTERNET_ALERT: "Ensure you are connected to the internet.",
+    SAVED: "Saved",
 };
 
-const LANG_JP_LIVESPACE = {
+window.LANG_JP_LIVESPACE = {
+    NEW_SPACE: "新しいスペース",
+    PAGE: "ページ",
+    RENAME_SPACE_TITLE: "スペース名を変更",
+    ERROR: "エラー",
     TITLE: "Livespace",
     PAN: "移動",
     SELECT: "選択",
@@ -62,10 +75,19 @@ const LANG_JP_LIVESPACE = {
     CIRCLE: "円",
     TRIANGLE: "三角形",
     PENTAGON: "五角形",
-    OCTAGON: "八角形"
+    OCTAGON: "八角形",
+    DELETE_PAGE_CONFIRM: "このページを削除しますか？",
+    DELETE_SPACE_CONFIRM: "「{title}」とそのすべてのページを削除してもよろしいですか？",
+    RENAME_SPACE_PROMPT: "このスペースの新しい名前を入力してください:",
+    CONNECT_INTERNET_ALERT: "インターネットに接続されていることを確認してください。",
+    SAVED: "保存しました",
 };
 
-const LANG_KO_LIVESPACE = {
+window.LANG_KO_LIVESPACE = {
+    NEW_SPACE: "새 스페이스",
+    PAGE: "페이지",
+    RENAME_SPACE_TITLE: "스페이스 이름 바꾸기",
+    ERROR: "오류",
     TITLE: "Livespace",
     PAN: "이동",
     SELECT: "선택",
@@ -95,10 +117,19 @@ const LANG_KO_LIVESPACE = {
     CIRCLE: "원",
     TRIANGLE: "삼각형",
     PENTAGON: "오각형",
-    OCTAGON: "팔각형"
+    OCTAGON: "팔각형",
+    DELETE_PAGE_CONFIRM: "이 페이지를 삭제하시겠습니까?",
+    DELETE_SPACE_CONFIRM: "\"{title}\" 및 모든 페이지를 삭제하시겠습니까?",
+    RENAME_SPACE_PROMPT: "이 공간의 새 이름을 입력하세요:",
+    CONNECT_INTERNET_ALERT: "인터넷에 연결되어 있는지 확인하세요.",
+    SAVED: "저장됨",
 };
 
-const LANG_ZH_LIVESPACE = {
+window.LANG_ZH_LIVESPACE = {
+    NEW_SPACE: "新空间",
+    PAGE: "页面",
+    RENAME_SPACE_TITLE: "重命名空间",
+    ERROR: "错误",
     TITLE: "Livespace",
     PAN: "平移",
     SELECT: "选择",
@@ -128,5 +159,15 @@ const LANG_ZH_LIVESPACE = {
     CIRCLE: "圆形",
     TRIANGLE: "三角形",
     PENTAGON: "五边形",
-    OCTAGON: "八边形"
+    OCTAGON: "八边形",
+    DELETE_PAGE_CONFIRM: "删除此页面？",
+    DELETE_SPACE_CONFIRM: "确定删除 \"{title}\" 及其所有页面吗？",
+    RENAME_SPACE_PROMPT: "为此空间输入新名称：",
+    CONNECT_INTERNET_ALERT: "请确保已连接到互联网。",
+    SAVED: "已保存",
 };
+
+var LANG_EN_LIVESPACE = window.LANG_EN_LIVESPACE;
+var LANG_JP_LIVESPACE = window.LANG_JP_LIVESPACE;
+var LANG_KO_LIVESPACE = window.LANG_KO_LIVESPACE;
+var LANG_ZH_LIVESPACE = window.LANG_ZH_LIVESPACE;
